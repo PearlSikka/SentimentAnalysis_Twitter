@@ -1,9 +1,9 @@
 # SentimentAnalysis_Twitter
 
-INTRODUCTION
-Humans love to express their opinions and sentiments. This opinion can be communicated through different forms like speech, body language, facial expressions, and text. Understanding users’ view or opinion by extracting subjective texts is known as Sentiment Analysis. While applications of sentiment analysis started out as curiosity-driven exercises, it has moved on to tasks which provide real value to organizations. One of the main tasks of Sentiment Analysis is to classify the polarity of a text, which represents whether the opinion expressed toward the subject in the piece is positive, negative, or neutral. Social networking sites like Twitter leverage Sentiment classification which acts as a rich source of information. In this report, I’ll share techniques and features I’ve used to build multiple classifiers to predict the overall sentiment of a tweet as positive, negative, and neutral and their corresponding evaluation results.	
+**INTRODUCTION**
+Humans love to express their opinions and sentiments. This opinion can be communicated through different forms like speech, body language, facial expressions, and text. Understanding users’ view or opinion by extracting subjective texts is known as Sentiment Analysis. While applications of sentiment analysis started out as curiosity-driven exercises, it has moved on to tasks which provide real value to organizations. One of the main tasks of Sentiment Analysis is to classify the polarity of a text, which represents whether the opinion expressed toward the subject in the piece is positive, negative, or neutral. Social networking sites like Twitter leverage Sentiment classification which acts as a rich source of information. In this report, I’ll share techniques and features I’ve used to build multiple classifiers (3 traditional and 1 bi-LSTM) to predict the overall sentiment of a tweet as positive, negative, and neutral and their corresponding evaluation results.	
 
-DATASET
+**DATASET**
 Dataset has been taken from Semeval 2017 (https://alt.qcri.org/semeval2017/task4/), an online competition, to build the sentiment classifiers. Dataset has been divided into 3 categories: Training, development and testing set. 
 Dataset Type	Dataset Size
 Training	    45101 tweets
@@ -13,7 +13,7 @@ Testset2	    1853 tweets
 Testset3	    2379 tweets
 Each dataset has 3 columns, tweet-id, sentiment, and tweet text. Training dataset is unbalanced as neutral tweets are more than positive and negative tweets. There are no null values/missing samples in the datasets.     
 
-PRE-PROCESSING
+**PRE-PROCESSING**
 To pre-process tweets, I’ve implemented below techniques for tweets:
 •	Removed contractions e.g. “It’s” to “It is” and “wont” to “will not”.
 •	Lowercase characters
@@ -26,16 +26,19 @@ To pre-process tweets, I’ve implemented below techniques for tweets:
 •	De-emojify the text i.e., removing any emojis like smileys with space.
 •	Stemming tokens. 
 •	Removing one length words.
+
 While pre-processing, I’ve used stemming rather than lemmatization as the accuracy of the model improved with stemming over lemmatization by around 2%. Also, I’ve not removed stop words as sentences like ‘I am not happy’ and ‘I am happy’ will be tagged under same sentiment if stop word ‘not’ is removed. Stop words like not, never, under etc. represent important information for our use case. 
-FEATURE EXTRACTION
+
+**FEATURE EXTRACTION**
 As raw text data can’t be fed directly into the machine learning algorithms, we need to convert text data into numerical features. To do so, we run feature extraction algorithms. Below are the feature extraction techniques which are required before training the classifiers. 
 •	Bag-of-words (BOW): The bag-of-words representation turns text into fixed-length vectors which have the count of how many times each word appears. There are 2 steps involved in this, creating a vocabulary, and determining the count. BOW representation doesn’t contain the context, it only determines the number of words in the document. To implement BOW, I’ve used scikit-learn’s CountVectorizer class.  
 •	TF-IDF: TF-IDF refers to term frequency -inverse document frequency. It denotes how relevant a word is to a document. Term frequency calculates how many times word appears in the document and inverse document frequency calculates the frequency of word across a set of documents. To find the important words which might be less frequently used in the set of documents, we use TF-IDF. To implement TF-IDF, I’ve used scikit-learn’s TfidfVectorizer class.
 •	GloVe: Global Vectors for Word Representation. An unsupervised learning algorithm that uses vector representations to find the semantic similarity between the words. I’ve used GloVe to obtain the pre-trained word vectors 6B tokens, 100D from (https://nlp.stanford.edu/projects/glove/)
 
-CLASSIFIERS
+**CLASSIFIERS**
 To develop the classifiers, I’ve used three traditional machine learning models (Naïve Bayes, Random Forest, Logistic Regression) and one neural network model with bi-directional LSTM layer. 
-USING TRADITIONAL MACHINE LEARNING CLASSIFIERS
+
+**USING TRADITIONAL MACHINE LEARNING CLASSIFIERS**
 After pre-processing the tweet column of dataset for training, development, and test datasets, feature extraction algorithms are run. For training traditional machine learning classifiers, feature generation has been achieved by either using tf-idf or bag-of-words.
 	Feature generation using TF-IDF: Tf-idf feature generation is implemented using TfidfVectorizer() class which generates vector representation for unigram, bigram and trigram features. Max-features has been set to 5000 which means it will consider the top max_features ordered by term frequency across the corpus. After this, the training set tweets are fit on TfidfVectorizer() object which generates vocabulary. On the vocabulary, training, development and test sets are transformed to output fixed vector representation of size (n_samples, max_features) with weights assigned to each feature. get_feature_names_out() outputs a list in which the ngrams appear according to the column position of each feature. 
 	Eeature generation using Bag-of-words (BOW): For BOW, CountVectorizer() class is used which is initialized with parameters for max_features=5000, n_gram=(1,3), min_df =1 and max_df=0.9. This will generate count of occurrences of tokens as a fixed vector representation of (n_samples, max_features) size. 
@@ -54,7 +57,7 @@ HYPERPARAMETER TUNING
 •	max_features parameter while feature extraction sets the vocabulary that only consider the top max_features ordered by term frequency. max_features = 5000 has been set to consider only top 5000 words and also in interest of time, the max_features have been limited. 
 •	n_estimators for random forest classifier sets the number of trees. The number of trees after tuning have been set to 100. If we increase the n_estimators by a large value, overfitting of data can happen. 
 
-NEURAL NETWORK WITH LSTM LAYER
+**NEURAL NETWORK WITH LSTM LAYER**
 Neural networks provide a modern and successful approach to text classification problems. The basic unit in NN is a neuron or node. The input is a vector representation of the features. The connections between nodes have associated weights(w). Weights can be either positive or negative depending on the function they need to perform, i.e., excite or inhibit the connection. When a neural net is trained, weights are set to a random value and are continually updated until the loss is minimized. 
 As with traditional ML approaches, first the pre-processing of the tweet column of the training, development, and test datasets is done. After pre-processing, tokens are generated using Tokenizer from Keras. Tokenizer will generate a vocabulary of terms and will sequence and pad the tweets. To extract features for texts, GloVe word embedding is being used. GloVe has already generated word vectors for 6B tokens which can be utilized for our use case of sentiment classification. Embedding matrix containing word and features is generated which is of the size (max_features, embedding_size). We have initialized max_features to 5000 and embedding_size is 100. 
 To implement Neural network, Pytorch’s nn.Module class has been leveraged. There are 6 layers which have been added to the neural network. 
@@ -69,12 +72,13 @@ HYPERPARAMETER TUNING
 •	Learning rate helps set the amount that the weights are updated during training. When learning rate was set to 0.1, no change in loss was seen and hence, F1 score was inferred as 0. Changing learning rate to 0.003 significantly improved the F1 score as the loss decreased and val_acc increased. This shows how important learning rate hyperparameter is.
 •	The Dropout layer applies Dropout to the input. It randomly sets input units to 0 with a frequency rate given at each step during training time, which helps prevent overfitting. Dropout layer rate =0.5 is set after tuning. The F1 score showed improvement when setting dropout layer rate from 0.1 to 0.5. 
 •	After multiple executions, n_epochs = 6 generated the highest accuracy without overfitting the training data. The validation loss increased after increasing the n_epochs more than 6. 
-PREDICTIONS
+
+**PREDICTIONS**
 After training the classifiers and tuning the parameters, the next step is to run predictions for unseen data. We’ve been provided with three testsets. 
 For traditional machine learning models, we first do feature extraction for testsets using tf-idf or bag-of-words and then run classifier.predict() function on feature_vector_test. This will generate class labels which are further evaluated to test the accuracy of the model.
 For neural network, the preprocessed testsets are tokenized and and padded using Keras. The tweets are further converted to tensors on which NN model is run to get predictions. Model(x).detach() is used to run predictions. Softmax() function is run on the predictions to normalize the values. The prediction with the highest value is chosen as the final predicted class label.
 
-EVALUATION AND RESULTS
+**EVALUATION AND RESULTS**
 To see how accurate the model predictions are, we are running evaluation script which produces the macroaveraged F1 score on the testsets. 
 Comparing performance of classifiers on 3 testsets:
 Naïve Bayes	Features used	Twitter-test1	Twitter-test2	Twitter-test3
@@ -108,4 +112,3 @@ Random Forest	Bag-of-words	0.423
 Logistic Regression	Bag-of-words	0.539
 
 Naïve Bayes performed the best with Bag-of-words features.
-
